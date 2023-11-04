@@ -31,9 +31,9 @@ public class MailNetClient {
     }
 
 
-    public void AuthLogin(String senderEmail, String appPassword) throws IOException {
+    public void AuthLogin(String senderEmail, char[] appPassword) throws IOException {
         this.senderEmail = senderEmail;
-        this.appPassword = appPassword;
+        this.appPassword = new String(appPassword);
 
         // SMTP 서버의 응답 메시지 출력
         System.out.println(reader.readLine());
@@ -47,13 +47,8 @@ public class MailNetClient {
         loginFlag = true;
     }
 
-    private void quit() throws IOException {
-        // QUIT
-        sendCommand(writer, reader, "QUIT");
-        socket.close();
-        loginFlag = false;
-    }
-    private void sendMail(String to, String subject, String text) throws IOException {
+
+    public void sendMail(String to, String subject, String text) throws IOException {
         sendCommand(writer, reader, encodeBase64(senderEmail));
         sendCommand(writer, reader, encodeBase64(appPassword));
 
@@ -71,6 +66,12 @@ public class MailNetClient {
         System.out.println(reader.readLine());
 
 
+    }
+    public void quit() throws IOException {
+        // QUIT
+        sendCommand(writer, reader, "QUIT");
+        socket.close();
+        loginFlag = false;
     }
 
     private void sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {

@@ -1,15 +1,18 @@
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class SendMail extends JFrame implements ViewObserver {
-    private JTextField senderEmail;
-    public JButton Submit;
-    private JTextArea textArea1;
-    private JTextField receiverEmail;
     private JPanel MainPanel;
+    private JTextField senderEmail;
     private JPasswordField password;
-    private JTextField Title;
+
+    private JTextField receiverEmail;
+    private JTextField subject;
+
+    private JTextArea textArea1;
+
+
+    public JButton Submit;
 
     public SendMail() {
         setContentPane(MainPanel);
@@ -19,12 +22,6 @@ public class SendMail extends JFrame implements ViewObserver {
 //        setLayout(null);
 //        setVisible(true);
 
-        Submit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
     }
 
     public void setListener(ActionListener listener){
@@ -32,6 +29,21 @@ public class SendMail extends JFrame implements ViewObserver {
     }
 
     public String getSenderEmail(){
-        return
+        return senderEmail.getText();
     }
+    public String getRecieverEmail(){
+        return receiverEmail.getText();
+    }
+    public char[] getPassword(){
+        return this.password.getPassword();
+    }
+
+    public String getSubject(){
+        return subject.getText();
+    }
+
+    public String getText(){
+        return textArea1.getText();
+    }
+
 }

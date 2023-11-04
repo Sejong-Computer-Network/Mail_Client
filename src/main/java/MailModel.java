@@ -8,7 +8,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 public class MailModel {
     private String senderEmail;
-    private MailNetClient netClient;
+    private char[] password;
     private ArrayList<ViewObserver> list = new ArrayList<ViewObserver>();
     public void addObserver(ViewObserver o){
         list.add(o);
@@ -21,6 +21,11 @@ public class MailModel {
 //            // o.updateMail
 //        }
     }
+
+    public void setPassword(char[] password){
+        this.password = password;
+    }
+
 
 }
 
