@@ -71,6 +71,11 @@ public class MailNetClient {
     public void quit() throws IOException {
         // QUIT
         sendCommand(writer, reader, "QUIT");
+
+        String response;
+        while ((response = reader.readLine()) != null) {
+            System.out.println(response);
+        }
         socket.close();
         loginFlag = false;
     }
