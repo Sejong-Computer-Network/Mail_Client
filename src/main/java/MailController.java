@@ -18,7 +18,15 @@ public class MailController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(e.getSource() == view.Submit){
+        Object o = e.getSource();
+        if (o == view.MailListBtn){
+//            System.out.println(e.get);
+            view.changeCard("mailPanel");
+        }
+        else if(o == view.MailSendBtn){
+            view.changeCard("formPanel");
+        }
+        else if(o == view.Submit){
             // login, handshake, send, close?
             String senderEmail = view.getSenderEmail();
             char[] senderPassword = view.getPassword();

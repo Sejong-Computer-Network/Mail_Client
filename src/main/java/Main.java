@@ -14,8 +14,6 @@ public class Main {
                 sendMailView.setVisible(true);
             }
         });
-//    }
-//        new Sju_mail();
-//    }
+
     }
 }
