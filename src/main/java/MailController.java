@@ -28,9 +28,8 @@ public class MailController implements ActionListener {
                 throw new RuntimeException(ex);
             }
             try {
-                boolean result = true;
-
-                net.AuthLogin(senderEmail, senderPassword);
+                boolean result = net.AuthLogin(senderEmail, senderPassword);
+                result = net.sendMail_login("kochinko11@senderEmail", null, senderPassword.toString());
 
                 if (result){
                     // 성공!
