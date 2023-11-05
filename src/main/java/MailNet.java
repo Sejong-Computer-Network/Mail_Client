@@ -56,14 +56,15 @@ public class MailNet {
 
         // 로그인 (AUTH LOGIN)
         sendCommand(writer, reader, "AUTH LOGIN");
+        sendCommand(writer, reader, encodeBase64(senderEmail));
+        sendCommand(writer, reader, encodeBase64(this.appPassword));
 
         loginFlag = true;
     }
 
 
     public void sendMail(String to, String subject, String text) throws IOException {
-        sendCommand(writer, reader, encodeBase64(senderEmail));
-        sendCommand(writer, reader, encodeBase64(appPassword));
+
 
         // MAIL FROM, RCPT TO
         sendCommand(writer, reader, "MAIL FROM: <"+senderEmail+">");
