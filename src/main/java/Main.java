@@ -6,7 +6,7 @@ public class Main {
             public void run() {
                 NaverMailClient sendMailView = new NaverMailClient();
                 MailModel model = new MailModel();
-                MailNetClient netClient = new MailNetClient();
+                MailNet netClient = new MailNet();
                 model.addObserver(sendMailView);
 
 //                model.reset();

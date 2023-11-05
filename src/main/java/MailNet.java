@@ -1,11 +1,10 @@
 import org.apache.commons.codec.binary.Base64;
 
-import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 
-public class MailNetClient {
+public class MailNet {
     private String SMTP_SERVER; // = "smtp.naver.com";
     private int SMTPS_PORT; // 465
 

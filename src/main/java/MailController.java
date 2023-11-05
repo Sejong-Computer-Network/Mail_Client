@@ -5,9 +5,9 @@ import java.io.IOException;
 public class MailController implements ActionListener {
     private final NaverMailClient view;
     private final MailModel model;
-    private final MailNetClient net;
+    private final MailNet net;
 
-    public MailController(NaverMailClient view, MailModel model, MailNetClient net){
+    public MailController(NaverMailClient view, MailModel model, MailNet net){
         this.model = model;
         this.view = view;
         this.net = net;
@@ -52,7 +52,6 @@ public class MailController implements ActionListener {
 
         }
         else if (o == view.MailListBtn){
-//            System.out.println(e.get);
             view.changeContentCard(NaverMailClient.cardMailPanel);
         }
         else if(o == view.MailSendBtn){
@@ -60,21 +59,15 @@ public class MailController implements ActionListener {
         }
         else if(o == view.Submit){
             // login, handshake, send, close?
-            String senderEmail = view.getSenderEmail();
-            char[] senderPassword = view.getPassword();
             String receiverEmail = view.getRecieverEmail();
-
-            model.setSenderEmail(senderEmail);
-            model.setPassword(senderPassword);
-
-
-
+            String subject = view.getSubject();
+            String text = view.getText();
 
             try {
                 net.sendMail(
                         receiverEmail,
-                        view.getSubject(),
-                        view.getText());
+                        subject,
+                        text);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }

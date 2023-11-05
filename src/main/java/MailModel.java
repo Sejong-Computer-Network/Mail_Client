@@ -26,6 +26,10 @@ public class MailModel {
         this.password = password;
     }
 
+    public String getSenderEmail(){
+        return senderEmail;
+    }
+    public char[] getPassword(){return password;}
 
 }
 
