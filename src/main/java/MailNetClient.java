@@ -66,6 +66,7 @@ public class MailNetClient {
         System.out.println(reader.readLine());
 
     }
+    
     public void quit() throws IOException {
         // QUIT
         sendCommand(writer, reader, "QUIT");
@@ -77,7 +78,12 @@ public class MailNetClient {
         writer.write(command + "\r\n");
         writer.flush();
         System.out.println("> " + command);
-        System.out.println(reader.readLine());
+
+        String response;
+        do {
+            response = reader.readLine();
+            System.out.println(response);
+        } while(response.charAt(3) == '-');
     }
 
     private String encodeBase64(String input) {
