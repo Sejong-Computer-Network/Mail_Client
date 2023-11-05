@@ -37,7 +37,7 @@ public class MailController implements ActionListener {
                     model.setSenderEmail(senderEmail);
                     model.setPassword(senderPassword);
                     view.changeMainCard(NaverMailClient.cardLoginPanel);
-
+                    net.quit();
                 }
                 else {
                     // 실패!
@@ -63,32 +63,31 @@ public class MailController implements ActionListener {
             String subject = view.getSubject();
             String text = view.getText();
 
+
             try {
+                System.out.println("submit pressed");
+                System.out.println("email, password:" + model.getSenderEmail() +" "+ new String(model.getPassword()));
+                net.SocketSetup(465, "smtp.naver.com");
+                net.AuthLogin(model.getSenderEmail(), model.getPassword());
                 net.sendMail(
                         receiverEmail,
                         subject,
                         text);
+                net.quit();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
 
-            try {
-                net.quit();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+
         }
         else if(o == view.LogoutBtn){
-            try {
-                net.quit();
-                // view 초기화, model 초기화, Net 연결끊기+초기화
-                model.setPassword(null);
-                model.setSenderEmail(null);
-                view.reset();
-                view.changeMainCard(NaverMailClient.cardLogoutPanel);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+//          net.quit();
+            // view 초기화, model 초기화, Net 연결끊기+초기화
+            model.setPassword(null);
+            model.setSenderEmail(null);
+            view.reset();
+            view.changeMainCard(NaverMailClient.cardLogoutPanel);
+
         }
     }
 }
