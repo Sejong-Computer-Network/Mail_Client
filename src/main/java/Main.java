@@ -4,7 +4,7 @@ public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                SendMail sendMailView = new SendMail();
+                NaverMailClient sendMailView = new NaverMailClient();
                 MailModel model = new MailModel();
                 MailNetClient netClient = new MailNetClient();
                 model.addObserver(sendMailView);

@@ -20,8 +20,8 @@ public class MailNetClient {
 
     private boolean loginFlag = true;
     public void SocketSetup(int port, String server) throws IOException {
-        SMTPS_PORT = port;
         SMTP_SERVER = server;
+        SMTPS_PORT = port;
 
         factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         socket = (SSLSocket) factory.createSocket(SMTP_SERVER, SMTPS_PORT);
