@@ -65,7 +65,8 @@ public class MailNetClient {
         writer.flush();
         System.out.println(reader.readLine());
 
-
+        //QUIT
+        quit();
     }
     public void quit() throws IOException {
         // QUIT
