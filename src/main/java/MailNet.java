@@ -44,7 +44,8 @@ public class MailNet {
     }
 
 
-    public void AuthLogin(String senderEmail, char[] appPassword) throws IOException {
+    public boolean AuthLogin(String senderEmail, char[] appPassword) throws IOException {
+        loginFlag = true;
         this.senderEmail = senderEmail;
         this.appPassword = new String(appPassword);
 
@@ -57,9 +58,28 @@ public class MailNet {
         // 로그인 (AUTH LOGIN)
         sendCommand(writer, reader, "AUTH LOGIN");
 
-        loginFlag = true;
+        return loginFlag;
     }
 
+    public boolean sendMail_login(String to, String subject, String text) throws IOException {
+        sendCommand(writer, reader, encodeBase64(senderEmail));
+        sendCommand(writer, reader, encodeBase64(appPassword));
+
+        // MAIL FROM, RCPT TO
+        sendCommand(writer, reader, "MAIL FROM: <"+senderEmail+">");
+        sendCommand(writer, reader, "RCPT TO: <"+to+">");
+
+        // DATA
+        sendCommand(writer, reader, "DATA");
+        writer.write("Subject: "+subject+"\r\n");
+        writer.write("From: "+senderEmail+"\r\n");
+        writer.write("To: "+to+"\r\n\r\n");
+        writer.write(text + "\r\n.\r\n");
+        writer.flush();
+        System.out.println(reader.readLine());
+
+        return loginFlag;
+    }
 
     public void sendMail(String to, String subject, String text) throws IOException {
         sendCommand(writer, reader, encodeBase64(senderEmail));
@@ -99,6 +119,8 @@ public class MailNet {
         do {
             response = reader.readLine();
             System.out.println(response);
+            if (response.startsWith("535 5.7.1"))
+            { loginFlag  = false; }
         } while(response.charAt(3) == '-');
     }
 
