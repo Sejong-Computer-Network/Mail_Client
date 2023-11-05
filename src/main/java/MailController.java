@@ -78,5 +78,17 @@ public class MailController implements ActionListener {
                 throw new RuntimeException(ex);
             }
         }
+        else if(o == view.LogoutBtn){
+            try {
+                net.quit();
+                // view 초기화, model 초기화, Net 연결끊기+초기화
+                model.setPassword(null);
+                model.setSenderEmail(null);
+                view.reset();
+                view.changeMainCard(NaverMailClient.cardLogoutPanel);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 }

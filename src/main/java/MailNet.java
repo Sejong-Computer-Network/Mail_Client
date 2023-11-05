@@ -83,7 +83,10 @@ public class MailNet {
     public void quit() throws IOException {
         // QUIT
         sendCommand(writer, reader, "QUIT");
+        reader.close();
+        writer.close();
         socket.close();
+
         loginFlag = false;
     }
 

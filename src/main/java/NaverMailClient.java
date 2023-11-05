@@ -92,4 +92,11 @@ public class NaverMailClient extends JFrame implements ViewObserver {
     public void changeMainCard(String name){
         MainCard.show(MainCardPanel, name);
     }
+
+
+    @Override
+    public void reset(){
+        senderEmail.setText("");
+        password.setText("");
+    }
 }
