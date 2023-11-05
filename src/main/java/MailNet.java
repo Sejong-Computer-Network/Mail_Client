@@ -44,7 +44,7 @@ public class MailNet {
     }
 
 
-    public void AuthLogin(String senderEmail, char[] appPassword) throws IOException {
+    public boolean AuthLogin(String senderEmail, char[] appPassword) throws IOException {
         this.senderEmail = senderEmail;
         this.appPassword = new String(appPassword);
 
@@ -55,9 +55,15 @@ public class MailNet {
         sendCommand(writer, reader, "EHLO localhost");
 
         // 로그인 (AUTH LOGIN)
-        sendCommand(writer, reader, "AUTH LOGIN");
+        String response = sendCommand(writer, reader, "AUTH LOGIN");
 
-        loginFlag = true;
+        if(response.startsWith("334")) {
+            loginFlag = true;
+            return true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
     }
 
 
@@ -87,16 +93,18 @@ public class MailNet {
         loginFlag = false;
     }
 
-    private void sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
+    private String sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
         writer.write(command + "\r\n");
         writer.flush();
         System.out.println("> " + command);
 
-        String response;
+        String response = "";
         do {
             response = reader.readLine();
             System.out.println(response);
         } while(response.charAt(3) == '-');
+
+        return response;
     }
 
     private String encodeBase64(String input) {
