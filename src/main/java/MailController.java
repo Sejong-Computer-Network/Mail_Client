@@ -3,11 +3,11 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 
 public class MailController implements ActionListener {
-    private SendMail view;
-    private MailModel model;
-    private MailNetClient net;
+    private final NaverMailClient view;
+    private final MailModel model;
+    private final MailNet net;
 
-    public MailController(SendMail view, MailModel model, MailNetClient net){
+    public MailController(NaverMailClient view, MailModel model, MailNet net){
         this.model = model;
         this.view = view;
         this.net = net;
@@ -19,38 +19,55 @@ public class MailController implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Object o = e.getSource();
-        if (o == view.MailListBtn){
-//            System.out.println(e.get);
-            view.changeCard("mailPanel");
-        }
-        else if(o == view.MailSendBtn){
-            view.changeCard("formPanel");
-        }
-        else if(o == view.Submit){
-            // login, handshake, send, close?
+        if(o==view.LoginBtn){
             String senderEmail = view.getSenderEmail();
             char[] senderPassword = view.getPassword();
-            String receiverEmail = view.getRecieverEmail();
-
-            model.setSenderEmail(senderEmail);
-            model.setPassword(senderPassword);
             try {
                 net.SocketSetup(465, "smtp.naver.com");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-
             try {
+                boolean result = true;
+
                 net.AuthLogin(senderEmail, senderPassword);
+
+                if (result){
+                    // 성공!
+                    model.setSenderEmail(senderEmail);
+                    model.setPassword(senderPassword);
+                    view.changeMainCard(NaverMailClient.cardLoginPanel);
+
+                }
+                else {
+                    // 실패!
+                    javax.swing.JOptionPane.showMessageDialog(view, "로그인에 실패했습니다. 올바른 정보를 입력하세요.", "로그인 실패", javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
+
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
 
+
+
+        }
+        else if (o == view.MailListBtn){
+            view.changeContentCard(NaverMailClient.cardMailPanel);
+        }
+        else if(o == view.MailSendBtn){
+            view.changeContentCard(NaverMailClient.cardFormPanel);
+        }
+        else if(o == view.Submit){
+            // login, handshake, send, close?
+            String receiverEmail = view.getRecieverEmail();
+            String subject = view.getSubject();
+            String text = view.getText();
+
             try {
                 net.sendMail(
                         receiverEmail,
-                        view.getSubject(),
-                        view.getText());
+                        subject,
+                        text);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }

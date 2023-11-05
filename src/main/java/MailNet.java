@@ -1,12 +1,11 @@
 import org.apache.commons.codec.binary.Base64;
 
-import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class MailNetClient {
+public class MailNet {
     private String SMTP_SERVER; // = "smtp.naver.com";
     private int SMTPS_PORT; // 465
 
@@ -34,8 +33,8 @@ public class MailNetClient {
 
     private boolean loginFlag = true;
     public void SocketSetup(int port, String server) throws IOException {
-        SMTPS_PORT = port;
         SMTP_SERVER = server;
+        SMTPS_PORT = port;
 
         factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         socket = (SSLSocket) factory.createSocket(SMTP_SERVER, SMTPS_PORT);
