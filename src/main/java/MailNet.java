@@ -4,6 +4,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class MailNet {
     private String SMTP_SERVER; // = "smtp.naver.com";
@@ -63,22 +64,46 @@ public class MailNet {
     }
 
 
-    public void sendMail(String to, String subject, String text) throws IOException {
-
-
+    public void sendMail(String to, String subject, String text, File file) throws IOException {
         // MAIL FROM, RCPT TO
-        sendCommand(writer, reader, "MAIL FROM: <"+senderEmail+">");
-        sendCommand(writer, reader, "RCPT TO: <"+to+">");
+        sendCommand(writer, reader, "MAIL FROM: <" + senderEmail + ">");
+        sendCommand(writer, reader, "RCPT TO: <" + to + ">");
 
         // DATA
         sendCommand(writer, reader, "DATA");
-        writer.write("Subject: "+subject+"\r\n");
-        writer.write("From: "+senderEmail+"\r\n");
-        writer.write("To: "+to+"\r\n\r\n");
-        writer.write(text + "\r\n.\r\n");
+
+        String boundary = "===" + System.currentTimeMillis() + "===";
+
+        // MIME 헤더 작성
+        writer.write("MIME-Version: 1.0\r\n");
+        writer.write("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
+
+        writer.write("Subject: " + subject + "\r\n");
+        writer.write("From: " + senderEmail + "\r\n");
+        writer.write("To: " + to + "\r\n\r\n");
+
+        // 이메일 본문 작성
+        writer.write("--" + boundary + "\r\n");
+        writer.write("Content-Type: text/plain; charset=UTF-8\r\n\r\n");
+        writer.write(text + "\r\n\r\n");
+
+        // 첨부 파일 처리
+        if (file != null && file.exists()) {
+            byte[] fileBytes = Files.readAllBytes(file.toPath());
+            String encodedFile = java.util.Base64.getEncoder().encodeToString(fileBytes);
+            writer.write("--" + boundary + "\r\n");
+            writer.write("Content-Type: application/octet-stream; name=\"" + file.getName() + "\"\r\n");
+            writer.write("Content-Transfer-Encoding: base64\r\n");
+            writer.write("Content-Disposition: attachment; filename=\"" + file.getName() + "\"\r\n\r\n");
+            writer.write(encodedFile);
+            writer.write("\r\n");
+            writer.write("--" + boundary + "--\r\n");
+        }
+
+        // 이메일 종료
+        writer.write(".\r\n");
         writer.flush();
         System.out.println(reader.readLine());
-
     }
     
     public void quit() throws IOException {

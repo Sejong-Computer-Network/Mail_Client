@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 public class NaverMailClient extends JFrame implements ViewObserver {
     public static final String cardLogoutPanel = "LogoutPanel";
@@ -41,11 +42,10 @@ public class NaverMailClient extends JFrame implements ViewObserver {
     private JTextField subject;
     private JTextArea text;
     public JButton Submit;
-    //
-
-
-
-
+    public JButton attachFile; // 파일 선택 버튼
+    public JLabel attachedFileName;
+    public JButton deleteAttachment;
+    public File attachedFile;
 
 
     public NaverMailClient() {
@@ -66,6 +66,8 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         MailSendBtn.addActionListener(listener);
         LoginBtn.addActionListener(listener);
         LogoutBtn.addActionListener(listener);
+        attachFile.addActionListener(listener);
+        deleteAttachment.addActionListener(listener);
     }
 
     public String getSenderEmail(){
@@ -86,6 +88,10 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         return text.getText();
     }
 
+    public File getAttachedFile() {
+        return attachedFile;
+    }
+
     public void changeContentCard(String name){
         ContentCard.show(ContentCardPanel, name);
     }
@@ -98,5 +104,6 @@ public class NaverMailClient extends JFrame implements ViewObserver {
     public void reset(){
         senderEmail.setText("");
         password.setText("");
+        attachedFile = null;
     }
 }
