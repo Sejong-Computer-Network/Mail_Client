@@ -26,6 +26,7 @@ public class MailController implements ActionListener {
             char[] senderPassword = view.getPassword();
             try {
                 net.SocketSetup(465, "smtp.naver.com");
+                net.IMAPSocketSetup(993, "imap.naver.com");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -105,6 +106,16 @@ public class MailController implements ActionListener {
             model.setSenderEmail(null);
             view.reset();
             view.changeMainCard(NaverMailClient.cardLogoutPanel);
+
+        }
+        else if (o == view.loadBtn) {
+            try{
+                net.IMAPGetMSG();
+                view.showMailList(net.mailText);
+
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
 
         }
     }
