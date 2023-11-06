@@ -27,8 +27,6 @@ public class MailController implements ActionListener {
 
 
             try {
-//                boolean result = net.AuthLogin(senderEmail, senderPassword);
-                boolean result = net.sendMail_login("kochinko11@senderEmail", null, new String(senderPassword));
                 net.SocketSetup(465, "smtp.naver.com");
                 net.IMAPSocketSetup(993, "imap.naver.com");
             } catch (IOException ex) {
@@ -36,6 +34,7 @@ public class MailController implements ActionListener {
             }
             try {
                 boolean result = net.AuthLogin(senderEmail, senderPassword);
+
 
 
                 if (result){
@@ -100,7 +99,6 @@ public class MailController implements ActionListener {
                 throw new RuntimeException(ex);
             }
 
-
         }
         else if(o == view.LogoutBtn){
 //          net.quit();
@@ -109,7 +107,6 @@ public class MailController implements ActionListener {
             model.setSenderEmail(null);
             view.reset();
             view.changeMainCard(NaverMailClient.cardLogoutPanel);
-
 
         }
         else if (o == view.loadBtn) {
