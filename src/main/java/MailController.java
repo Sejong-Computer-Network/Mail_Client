@@ -26,6 +26,8 @@ public class MailController implements ActionListener {
         if (o == view.LoginBtn) {
             String senderEmail = view.getSenderEmail();
             char[] senderPassword = view.getPassword();
+
+
             try {
                 net.SocketSetup(465, "smtp.naver.com");
                 net.IMAPSocketSetup(993, "imap.naver.com");
@@ -97,7 +99,6 @@ public class MailController implements ActionListener {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-
 
         } else if (o == view.LogoutBtn) {
 //          net.quit();
