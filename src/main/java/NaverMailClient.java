@@ -111,6 +111,7 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         password.setText("");
         subject.setText("");
         text.setText("");
+        receiverEmail.setText("");
         attachedFile = null;
     }
 
