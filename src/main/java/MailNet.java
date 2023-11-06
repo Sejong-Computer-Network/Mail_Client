@@ -58,7 +58,6 @@ public class MailNet {
         sendCommand(writer, reader, encodeBase64(senderEmail));
         sendCommand(writer, reader, encodeBase64(this.appPassword));
 
-
         loginFlag = true;   // TODO: response 확인해서 처리해야됨
 
         return loginFlag;
@@ -105,6 +104,7 @@ public class MailNet {
         writer.write(".\r\n");
         writer.flush();
         System.out.println(reader.readLine());
+
     }
     
     public void quit() throws IOException {
