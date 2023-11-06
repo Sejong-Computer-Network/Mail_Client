@@ -44,6 +44,7 @@ public class MailNet {
 
 
     public boolean AuthLogin(String senderEmail, char[] appPassword) throws IOException {
+        loginFlag = true;
         this.senderEmail = senderEmail;
         this.appPassword = new String(appPassword);
 
@@ -53,22 +54,40 @@ public class MailNet {
         // HELO/EHLO
         sendCommand(writer, reader, "EHLO localhost");
 
+        String response;
         // 로그인 (AUTH LOGIN)
-        sendCommand(writer, reader, "AUTH LOGIN");
-        sendCommand(writer, reader, encodeBase64(senderEmail));
-        sendCommand(writer, reader, encodeBase64(this.appPassword));
+        response = sendCommand(writer, reader, "AUTH LOGIN");
+        if (response.startsWith("334")) {
+            loginFlag = true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
 
+        response = sendCommand(writer, reader, encodeBase64(senderEmail));
+        if (response.startsWith("334")) {
+            loginFlag = true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
 
-        loginFlag = true;   // TODO: response 확인해서 처리해야됨
+        response = sendCommand(writer, reader, encodeBase64(this.appPassword));
+        if (response.startsWith("235")) {
+            loginFlag = true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
 
-        return loginFlag;
+        return true;
     }
 
 
-    public void sendMail(String to, String subject, String text, File file) throws IOException {
+    public String sendMail(String to, String subject, String text, File file) throws IOException {
         // MAIL FROM, RCPT TO
-        sendCommand(writer, reader, "MAIL FROM: <" + senderEmail + ">");
-        sendCommand(writer, reader, "RCPT TO: <" + to + ">");
+        sendCommand(writer, reader, "MAIL FROM: <"+senderEmail+">");
+        sendCommand(writer, reader, "RCPT TO: <"+to+">");
 
         // DATA
         sendCommand(writer, reader, "DATA");
@@ -104,7 +123,11 @@ public class MailNet {
         // 이메일 종료
         writer.write(".\r\n");
         writer.flush();
-        System.out.println(reader.readLine());
+
+        String response = reader.readLine();
+        System.out.println(response);
+
+        return response;
     }
     
     public void quit() throws IOException {
@@ -113,11 +136,11 @@ public class MailNet {
         reader.close();
         writer.close();
         socket.close();
-
         loginFlag = false;
     }
 
-    private void sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
+    private String sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
+
         writer.write(command + "\r\n");
         writer.flush();
         System.out.println("> " + command);
@@ -126,7 +149,25 @@ public class MailNet {
         do {
             response = reader.readLine();
             System.out.println(response);
+//            if (response.startsWith("535 5.7.1"))
+//            {   loginFlag  = false;
+//                errorDisplayed=true;
+//            }
+//            else if(response.startsWith("5") || response.startsWith("4"))
+//            {
+//                if (!errorDisplayed) {
+//                    javax.swing.JOptionPane.showMessageDialog(null, response, "error_message", javax.swing.JOptionPane.ERROR_MESSAGE);
+//                    // 상태 변수를 true로 설정하여 더 이상 오류 메시지가 출력되지 않도록 합니다.
+//                    errorDisplayed = true;
+//                }
+//            }
+//            else if(!errorDisplayed && response.startsWith("221"))
+//            {
+//                javax.swing.JOptionPane.showMessageDialog(null, "이메일이 정상적으로 전송되었습니다!", "Success", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+//            }
         } while(response.charAt(3) == '-');
+
+        return response;
     }
 
     private String encodeBase64(String input) {
