@@ -53,21 +53,40 @@ public class MailNet {
         // HELO/EHLO
         sendCommand(writer, reader, "EHLO localhost");
 
+        String response;
         // 로그인 (AUTH LOGIN)
-        sendCommand(writer, reader, "AUTH LOGIN");
-        sendCommand(writer, reader, encodeBase64(senderEmail));
-        sendCommand(writer, reader, encodeBase64(this.appPassword));
+        response = sendCommand(writer, reader, "AUTH LOGIN");
+        if (response.startsWith("334")) {
+            loginFlag = true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
 
-        loginFlag = true;   // TODO: response 확인해서 처리해야됨
+        response = sendCommand(writer, reader, encodeBase64(senderEmail));
+        if (response.startsWith("334")) {
+            loginFlag = true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
 
-        return loginFlag;
+        response = sendCommand(writer, reader, encodeBase64(this.appPassword));
+        if (response.startsWith("235")) {
+            loginFlag = true;
+        } else {
+            loginFlag = false;
+            return false;
+        }
+
+        return true;
     }
 
 
-    public void sendMail(String to, String subject, String text, File file) throws IOException {
+    public String sendMail(String to, String subject, String text, File file) throws IOException {
         // MAIL FROM, RCPT TO
-        sendCommand(writer, reader, "MAIL FROM: <" + senderEmail + ">");
-        sendCommand(writer, reader, "RCPT TO: <" + to + ">");
+        sendCommand(writer, reader, "MAIL FROM: <"+senderEmail+">");
+        sendCommand(writer, reader, "RCPT TO: <"+to+">");
 
         // DATA
         sendCommand(writer, reader, "DATA");
@@ -103,8 +122,11 @@ public class MailNet {
         // 이메일 종료
         writer.write(".\r\n");
         writer.flush();
-        System.out.println(reader.readLine());
 
+        String response = reader.readLine();
+        System.out.println(response);
+
+        return response;
     }
     
     public void quit() throws IOException {
@@ -117,7 +139,8 @@ public class MailNet {
         loginFlag = false;
     }
 
-    private void sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
+    private String sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
+
         writer.write(command + "\r\n");
         writer.flush();
         System.out.println("> " + command);
@@ -127,6 +150,8 @@ public class MailNet {
             response = reader.readLine();
             System.out.println(response);
         } while(response.charAt(3) == '-');
+
+        return response;
     }
 
     private String encodeBase64(String input) {
