@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Base64;
 
 public class NaverMailClient extends JFrame implements ViewObserver {
     public static final String cardLogoutPanel = "LogoutPanel";
@@ -121,37 +122,40 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         String[] col = {"Category", "Contents"};
         Object[][] data = new Object[mailText.length*20][2];
 
-        int idx =0;
+        int idx = 0;
         for (int i = 0; i < mailText.length; i++) {
             String[] lines = mailText[i].split("\n");
-            int flag=0;
-            for (int j = 0; j<lines.length;j++) {
-                String[] parts = lines[j].split(": ");
-                System.out.println(parts[0].trim());
+            int flag = 0;
 
+            for (int j = 0; j < lines.length; j++) {
+                String line = lines[j].trim();
+                if (line.contains(": ")) {
+                    String[] parts = line.split(": ", 2); // Only split on the first ':'
 
-                if (parts[0].startsWith("DATE") || parts[0].startsWith("SUBJECT") || parts[0].startsWith("FROM")) {
-
-                    data[idx][0] = parts[0].trim();
-                    data[idx][1] = parts[1].trim();
-                    idx++;
-                } else if (parts[0].startsWith("TEXT") || flag == 1) {
-
-                    if (flag == 1) {
-                        data[idx][1] += parts[0].trim() + "\n";
-                    }
-                    else {
+                    if (parts[0].startsWith("DATE") || parts[0].startsWith("SUBJECT") || parts[0].startsWith("FROM")) {
                         data[idx][0] = parts[0].trim();
                         data[idx][1] = parts[1].trim();
+                        idx++;
+                    } else if (parts[0].startsWith("BODY[TEXT]") || flag == 1) {
+                        if (flag == 1) {
+                            data[idx][1] += new String(Base64.getDecoder().decode(parts[0])) + "\n";
+                        } else {
+                            data[idx][0] = parts[0].trim();
+                            data[idx][1] = new String(Base64.getDecoder().decode(parts[1]));
+                        }
+                        flag = 1;
                     }
-                    flag = 1;
+                } else if(flag == 1) { // If the line doesn't contain ':', and we are in the 'TEXT' section.
+                    data[idx][1] += new String(Base64.getDecoder().decode(line)) + "\n";
                 }
             }
+
             idx++;
             data[idx][0] = "";
             data[idx][1] = "";
             idx++;
         }
+
         mailTable = new JTable(data, col);
         maillist.setViewportView(mailTable);
     }
