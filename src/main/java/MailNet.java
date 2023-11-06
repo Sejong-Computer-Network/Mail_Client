@@ -43,7 +43,7 @@ public class MailNet {
     }
 
 
-    public void AuthLogin(String senderEmail, char[] appPassword) throws IOException {
+    public boolean AuthLogin(String senderEmail, char[] appPassword) throws IOException {
         this.senderEmail = senderEmail;
         this.appPassword = new String(appPassword);
 
