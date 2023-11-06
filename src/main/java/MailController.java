@@ -1,5 +1,7 @@
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 
 public class MailController implements ActionListener {
@@ -24,6 +26,7 @@ public class MailController implements ActionListener {
             char[] senderPassword = view.getPassword();
             try {
                 net.SocketSetup(465, "smtp.naver.com");
+                net.IMAPSocketSetup(993, "imap.naver.com");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -57,11 +60,25 @@ public class MailController implements ActionListener {
         else if(o == view.MailSendBtn){
             view.changeContentCard(NaverMailClient.cardFormPanel);
         }
-        else if(o == view.Submit){
+        else if (o == view.attachFile) {
+            JFileChooser fileChooser = new JFileChooser();
+            int returnValue = fileChooser.showOpenDialog(view.getContentPane());
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                java.io.File file = fileChooser.getSelectedFile();
+                view.attachedFileName.setText(file.getName());
+                view.attachedFile = file;
+                view.deleteAttachment.setVisible(true);
+            }
+        } else if (o==view.deleteAttachment) {
+           view.attachedFile = null;
+           view.attachedFileName.setText("");
+           view.deleteAttachment.setVisible(false);
+        } else if(o == view.Submit){
             // login, handshake, send, close?
             String receiverEmail = view.getRecieverEmail();
             String subject = view.getSubject();
             String text = view.getText();
+            File file = view.getAttachedFile();
 
 
             try {
@@ -72,7 +89,9 @@ public class MailController implements ActionListener {
                 net.sendMail(
                         receiverEmail,
                         subject,
-                        text);
+                        text,
+                        file
+                        );
                 net.quit();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -87,6 +106,16 @@ public class MailController implements ActionListener {
             model.setSenderEmail(null);
             view.reset();
             view.changeMainCard(NaverMailClient.cardLogoutPanel);
+
+        }
+        else if (o == view.loadBtn) {
+            try{
+                net.IMAPGetMSG();
+                view.showMailList(net.mailText);
+
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
 
         }
     }

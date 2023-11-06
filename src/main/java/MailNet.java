@@ -4,6 +4,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class MailNet {
     private String SMTP_SERVER; // = "smtp.naver.com";
@@ -28,9 +29,7 @@ public class MailNet {
     private BufferedReader imap_reader;
     private BufferedWriter imap_writer;
 
-    public String date_sub_from;
-    public String text;
-
+    public String[] mailText = new String[3];
     private boolean loginFlag = true;
     public void SocketSetup(int port, String server) throws IOException {
         SMTP_SERVER = server;
@@ -63,22 +62,46 @@ public class MailNet {
     }
 
 
-    public void sendMail(String to, String subject, String text) throws IOException {
-
-
+    public void sendMail(String to, String subject, String text, File file) throws IOException {
         // MAIL FROM, RCPT TO
-        sendCommand(writer, reader, "MAIL FROM: <"+senderEmail+">");
-        sendCommand(writer, reader, "RCPT TO: <"+to+">");
+        sendCommand(writer, reader, "MAIL FROM: <" + senderEmail + ">");
+        sendCommand(writer, reader, "RCPT TO: <" + to + ">");
 
         // DATA
         sendCommand(writer, reader, "DATA");
-        writer.write("Subject: "+subject+"\r\n");
-        writer.write("From: "+senderEmail+"\r\n");
-        writer.write("To: "+to+"\r\n\r\n");
-        writer.write(text + "\r\n.\r\n");
+
+        String boundary = "===" + System.currentTimeMillis() + "===";
+
+        // MIME 헤더 작성
+        writer.write("MIME-Version: 1.0\r\n");
+        writer.write("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
+
+        writer.write("Subject: " + subject + "\r\n");
+        writer.write("From: " + senderEmail + "\r\n");
+        writer.write("To: " + to + "\r\n\r\n");
+
+        // 이메일 본문 작성
+        writer.write("--" + boundary + "\r\n");
+        writer.write("Content-Type: text/plain; charset=UTF-8\r\n\r\n");
+        writer.write(text + "\r\n\r\n");
+
+        // 첨부 파일 처리
+        if (file != null && file.exists()) {
+            byte[] fileBytes = Files.readAllBytes(file.toPath());
+            String encodedFile = java.util.Base64.getEncoder().encodeToString(fileBytes);
+            writer.write("--" + boundary + "\r\n");
+            writer.write("Content-Type: application/octet-stream; name=\"" + file.getName() + "\"\r\n");
+            writer.write("Content-Transfer-Encoding: base64\r\n");
+            writer.write("Content-Disposition: attachment; filename=\"" + file.getName() + "\"\r\n\r\n");
+            writer.write(encodedFile);
+            writer.write("\r\n");
+            writer.write("--" + boundary + "--\r\n");
+        }
+
+        // 이메일 종료
+        writer.write(".\r\n");
         writer.flush();
         System.out.println(reader.readLine());
-
     }
     
     public void quit() throws IOException {
@@ -115,84 +138,117 @@ public class MailNet {
         IMAP_SERVER = server;
 
         imap_factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        imap_socket = (SSLSocket) factory.createSocket(IMAP_SERVER, IMAP_PORT);
+        imap_socket = (SSLSocket) imap_factory.createSocket(IMAP_SERVER, IMAP_PORT);
 
-        imap_reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        imap_writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        imap_reader = new BufferedReader(new InputStreamReader(imap_socket.getInputStream()));
+        imap_writer = new BufferedWriter(new OutputStreamWriter(imap_socket.getOutputStream()));
     }
 
-    private void IMAPGetMSG() throws IOException{
-        String command = "A0001 LOGIN " + senderEmail + " " + appPassword;
-        IMAPsendCommand(imap_writer, imap_reader, command, "A0001");
+    public void IMAPGetMSG() throws IOException{
+        String command = "A0001 LOGIN " + senderEmail + " " + appPassword + "\r\n";
+        String check;
 
-        command = "A0002 SELECT INBOX";
-        IMAPsendCommand(imap_writer, imap_reader, command, "A0002");
+        check = IMAPsendCommand(imap_writer, imap_reader, command, "A0001");
 
-        int uid = 1000;
-        int cnt_mail = 3;
-        for (int i = 0 ; i < cnt_mail ; i++) {
-            int uid_tmp = uid - i;
-            command = "A0003 FETCH " + uid_tmp + " (FLAGS BODY[HEADER.FIELDS (DATE SUBJECT FROM)])";
-            IMAPfetchCommand(imap_writer, imap_reader, command, "A0003", "DSF");
+        if (check.startsWith("A0001 OK")){
+            command = "A0002 SELECT INBOX\r\n";
+            check = IMAPsendCommand(imap_writer, imap_reader, command, "A0002");
 
-            command = "A0003 FETCH " + uid_tmp + " (FLAGS BODY[TEXT])";
-            IMAPfetchCommand(imap_writer, imap_reader, command, "A0003", "TEXT");
+            if (check.startsWith("A0002 OK")){
+                int uid = 1000;
+                int cnt_mail = 3;
+                for (int i = 0 ; i < cnt_mail ; i++) {
+                    int uid_tmp = uid - i;
+                    command = "A0003 FETCH " + uid_tmp + " (FLAGS BODY[HEADER.FIELDS (DATE SUBJECT FROM)])\r\n";
+                    String dsf = IMAPfetchCommand(imap_writer, imap_reader, command, "A0003", "DSF", uid_tmp);
+
+                    command = "A0003 FETCH " + uid_tmp + " (FLAGS BODY[TEXT])\r\n";
+                    String txt = IMAPfetchCommand(imap_writer, imap_reader, command, "A0003", "TEXT", uid_tmp);
+
+                    mailText[i] += dsf + "TEXT: " +txt;
+
+                    mailText[i] = mailText[i].replace("null", "");
+                }
+            }
+
         }
 
-        command = "A0004 LOGOUT";
+
     }
-    private void logout(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
-        writer.write(command + "\r\n");
+    private void logout(BufferedWriter writer, BufferedReader reader) throws IOException {
+        String command = "A0004 LOGOUT";
+        writer.write(command);
         writer.flush();
         String res_logout = reader.readLine();
         System.out.println(res_logout);
         socket.close();
     }
-    private void IMAPsendCommand(BufferedWriter writer, BufferedReader reader, String command, String tag) throws IOException {
-        writer.write(command + "\r\n");
+    private String IMAPsendCommand(BufferedWriter writer, BufferedReader reader, String command, String tag) throws IOException {
+        writer.write(command);
         writer.flush();
         System.out.println("> " + command);
         String response;
-        do {
+        while (true) {
             response = reader.readLine();
             System.out.println(response);
-        } while(response.startsWith(tag));
-
+            if (response.startsWith(tag))
+                break;
+        }
+        return response;
     }
 
-    private void IMAPfetchCommand(BufferedWriter writer, BufferedReader reader, String command, String tag, String field) throws IOException {
-        writer.write(command + "\r\n");
+    private String IMAPfetchCommand(BufferedWriter writer, BufferedReader reader, String command, String tag, String field, int uid) throws IOException {
+        writer.write(command);
         writer.flush();
         System.out.println("> " + command);
 
+        String date_sub_from = "";
+        String text= "";
+        String text_tmp = "";
         String response;
+        String check = "* " + uid + " FETCH";
         if (field.equals("DSF")){
-            do {
+            while (true) {
                 response = reader.readLine();
-                System.out.println(response);
-                String decode_fetch = parseEmailResponse(response);
-                if (decode_fetch.isEmpty())
+                if (response.equals("A0003 OK Fetch completed."))
+                    break;
+
+                // 요녀석이 우리가 필요한 DATE, SUBJECT, FROM 문자열 받아오는 부분
+                // 한번에 한줄씩 받아옴.
+                String decode_fetch = parseEmailResponse(response, uid);
+
+                // 중간 중간 이상치(필요없는 데이터)가 있는 경우 ""값이 반환되기 때문에 한번 필터링
+                if (decode_fetch == null || decode_fetch.trim().isEmpty())
                     continue;
 
-                date_sub_from += decode_fetch;
-
-
-            } while(response.startsWith(tag));
+                System.out.println(decode_fetch);
+                date_sub_from += decode_fetch + "\n";
+            }
+            return date_sub_from;
 
         } else if (field.equals("TEXT")){
-            do {
+
+            while (true) {
                 response = reader.readLine();
                 System.out.println(response);
-                if (response.startsWith("* 1000 FETCH"))
+                // Fetch 응답 값으로 맨 처음 오는 값. 별 의미가 없기에 무시
+                if (response.startsWith(check))
                     continue;
 
-                text += response;
+                // 처리 끝나면 오는 응답.
+                if (response.equals("A0003 OK Fetch completed."))
+                    break;
 
-            } while(response.startsWith(tag));
+                // 을 제외한 본문 내용만 가져올 것이다.
+                text_tmp += response;
 
-            text = text.replaceAll("=.*", "");
-            String decode_fetch = parseEmailResponse(text);
+            }
+            text_tmp = text_tmp.replaceAll("=.*", "");
+            text = parseEmailResponse(text_tmp, uid);
+            text += "\n";
+            System.out.println(text);
         }
+        return text;
 
     }
 
@@ -233,33 +289,33 @@ public class MailNet {
             return "";
         }
     }
-    public static String parseEmailResponse(String fetchResponse) {
+    public static String parseEmailResponse(String fetchResponse, int uid) {
 
         String result;
-        if (fetchResponse.startsWith("* 1000 FETCH")) {
+        String check= "* " + uid + " FETCH";
+        if (fetchResponse.startsWith(check)) {
             result = "";
 
         } else if (fetchResponse.startsWith("SUBJECT:")) {
 
-
             String encodedSubject = fetchResponse.substring(9).trim();
             if (Character.isLetter(encodedSubject.charAt(0))){
-                result = "Subject: " + encodedSubject;
+                result = "SUBJECT: " + encodedSubject;
             }
             else{
                 String decodedSubject = decodeBase64String(encodedSubject, "DSF");
-                result = "Subject: " + decodedSubject;
+                result = "SUBJECT: " + decodedSubject;
             }
 
         } else if (fetchResponse.startsWith("FROM:")) {
 
             String encodedFrom = fetchResponse.substring(6).trim();
             if (Character.isLetter(encodedFrom.charAt(0))){
-                result = "From: " + encodedFrom;
+                result = "FROM: " + encodedFrom;
             }
             else{
                 String decodedFrom = decodeBase64String(encodedFrom, "DSF");
-                result = "From: " + decodedFrom;
+                result = "FROM: " + decodedFrom;
             }
 
 
