@@ -32,6 +32,8 @@ public class MailNet {
     public String text;
 
     private boolean loginFlag = true;
+
+    private boolean errorDisplayed = false;
     public void SocketSetup(int port, String server) throws IOException {
         SMTP_SERVER = server;
         SMTPS_PORT = port;
@@ -61,7 +63,8 @@ public class MailNet {
         return loginFlag;
     }
 
-    public boolean sendMail_login(String to, String subject, String text) throws IOException {
+    public boolean sendMail_login(String to, String subject, String text) throws IOException
+    {
         sendCommand(writer, reader, encodeBase64(senderEmail));
         sendCommand(writer, reader, encodeBase64(appPassword));
 
@@ -82,6 +85,7 @@ public class MailNet {
     }
 
     public void sendMail(String to, String subject, String text) throws IOException {
+
         sendCommand(writer, reader, encodeBase64(senderEmail));
         sendCommand(writer, reader, encodeBase64(appPassword));
 
@@ -106,11 +110,12 @@ public class MailNet {
         reader.close();
         writer.close();
         socket.close();
-
+        errorDisplayed = false;
         loginFlag = false;
     }
 
     private void sendCommand(BufferedWriter writer, BufferedReader reader, String command) throws IOException {
+
         writer.write(command + "\r\n");
         writer.flush();
         System.out.println("> " + command);
@@ -120,7 +125,21 @@ public class MailNet {
             response = reader.readLine();
             System.out.println(response);
             if (response.startsWith("535 5.7.1"))
-            { loginFlag  = false; }
+            {   loginFlag  = false;
+                errorDisplayed=true;
+            }
+            else if(response.startsWith("5") || response.startsWith("4"))
+            {
+                if (!errorDisplayed) {
+                    javax.swing.JOptionPane.showMessageDialog(null, response, "error_message", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    // 상태 변수를 true로 설정하여 더 이상 오류 메시지가 출력되지 않도록 합니다.
+                    errorDisplayed = true;
+                }
+            }
+            else if(!errorDisplayed && response.startsWith("221"))
+            {
+                javax.swing.JOptionPane.showMessageDialog(null, "이메일이 정상적으로 전송되었습니다!", "Success", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
         } while(response.charAt(3) == '-');
     }
 
