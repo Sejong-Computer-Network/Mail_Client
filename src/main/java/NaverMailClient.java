@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 public class NaverMailClient extends JFrame implements ViewObserver {
     public static final String cardLogoutPanel = "LogoutPanel";
@@ -34,6 +35,10 @@ public class NaverMailClient extends JFrame implements ViewObserver {
 
     // 2.2.1 Home/LoginPanel > ContentPanel/MailListPanel
     private JPanel MailListPanel;
+    public JButton loadBtn;
+    private JScrollPane maillist;
+    private JLabel maillistname;
+    private JTable mailTable;
 
     // 2.2.2 Home/LoginPanel > ContentPanel/FormPanel
     private JPanel FormPanel;
@@ -41,11 +46,10 @@ public class NaverMailClient extends JFrame implements ViewObserver {
     private JTextField subject;
     private JTextArea text;
     public JButton Submit;
-    //
-
-
-
-
+    public JButton attachFile; // 파일 선택 버튼
+    public JLabel attachedFileName;
+    public JButton deleteAttachment;
+    public File attachedFile;
 
 
     public NaverMailClient() {
@@ -66,6 +70,9 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         MailSendBtn.addActionListener(listener);
         LoginBtn.addActionListener(listener);
         LogoutBtn.addActionListener(listener);
+        attachFile.addActionListener(listener);
+        deleteAttachment.addActionListener(listener);
+        loadBtn.addActionListener(listener);
     }
 
     public String getSenderEmail(){
@@ -86,10 +93,65 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         return text.getText();
     }
 
+    public File getAttachedFile() {
+        return attachedFile;
+    }
+
     public void changeContentCard(String name){
         ContentCard.show(ContentCardPanel, name);
     }
     public void changeMainCard(String name){
         MainCard.show(MainCardPanel, name);
+    }
+
+
+    @Override
+    public void reset(){
+        senderEmail.setText("");
+        password.setText("");
+        attachedFile = null;
+    }
+
+    public void showMailList(String[] mailText){
+        String[] col = {"Category", "Contents"};
+        Object[][] data = new Object[mailText.length*20][2];
+
+        int idx =0;
+        for (int i = 0; i < mailText.length; i++) {
+            String[] lines = mailText[i].split("\n");
+            int flag=0;
+            for (int j = 0; j<lines.length;j++) {
+                String[] parts = lines[j].split(": ");
+                System.out.println(parts[0].trim());
+
+
+                if (parts[0].startsWith("DATE") || parts[0].startsWith("SUBJECT") || parts[0].startsWith("FROM")) {
+
+                    data[idx][0] = parts[0].trim();
+                    data[idx][1] = parts[1].trim();
+                    idx++;
+                } else if (parts[0].startsWith("TEXT") || flag == 1) {
+
+                    if (flag == 1) {
+                        data[idx][1] += parts[0].trim() + "\n";
+                    }
+                    else {
+                        data[idx][0] = parts[0].trim();
+                        data[idx][1] = parts[1].trim();
+                    }
+                    flag = 1;
+                }
+            }
+            idx++;
+            data[idx][0] = "";
+            data[idx][1] = "";
+            idx++;
+        }
+        mailTable = new JTable(data, col);
+        maillist.setViewportView(mailTable);
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
     }
 }
