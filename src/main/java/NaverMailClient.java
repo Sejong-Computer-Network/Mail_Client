@@ -109,6 +109,8 @@ public class NaverMailClient extends JFrame implements ViewObserver {
     public void reset(){
         senderEmail.setText("");
         password.setText("");
+        subject.setText("");
+        text.setText("");
         attachedFile = null;
     }
 
@@ -153,5 +155,6 @@ public class NaverMailClient extends JFrame implements ViewObserver {
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
+
     }
 }
