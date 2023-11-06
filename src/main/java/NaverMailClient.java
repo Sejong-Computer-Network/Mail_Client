@@ -113,6 +113,8 @@ public class NaverMailClient extends JFrame implements ViewObserver {
         text.setText("");
         receiverEmail.setText("");
         attachedFile = null;
+        attachedFileName.setText("");
+        deleteAttachment.setVisible(false);
     }
 
     public void showMailList(String[] mailText){
